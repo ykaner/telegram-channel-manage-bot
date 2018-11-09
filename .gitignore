@@ -1,0 +1,12 @@
+*.pyc
+.idea
+*/.idea/
+
+*.secret
+
+*.zip
+*.rar
+*.doc
+*.docx
+*.pdf
+
