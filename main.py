@@ -18,7 +18,7 @@ with open('bot_api_token.secret', 'r') as f:
 	bot_api_token = f.read()
 	bot_api_token = bot_api_token.replace('\n', '')
 
-channel_name = '@ilshoppingt'
+channel_name = '@IsraelShopping'
 
 
 def start_handler(bot, update):
