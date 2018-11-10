@@ -8,7 +8,8 @@ senders = {
 	'ykaner': [0.25, 'yk12953'],
 	'NoamH': [0.2, '2'],
 	'rotemsd': [0.2, '10'],
-	'ohad1': [0.2, 'yk12953']
+	'ohad1': [0.2, 'yk12953'],
+	'duperyuyu': [0.4, 'duper']
 }
 
 

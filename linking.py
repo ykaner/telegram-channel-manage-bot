@@ -1,9 +1,8 @@
 import os
 import urllib.parse as urlparse
 import urllib.request as request
-from telegraph.upload import upload_file
 
-import validators
+from telegraph.upload import upload_file
 
 
 def is_valid_url(link):
@@ -38,7 +37,7 @@ def prod_id_from_ebay(link):
 def prod_id_from_ali(link):
 	plink = os.path.splitext(os.path.basename(urlparse.urlparse(link).path))[0]
 	idx = plink.find('_')
-	return plink[idx+1:]
+	return plink[idx + 1:]
 
 
 def zipy_prod_by_id(source, pid):

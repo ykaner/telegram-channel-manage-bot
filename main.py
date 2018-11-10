@@ -1,20 +1,14 @@
-import io
 import logging
 import os
 
-from PIL import Image
-
-from telegraph import Telegraph
-import telegram
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, MessageEntity
 from telegram.ext import Updater, CommandHandler, ConversationHandler, MessageHandler, Filters
 
 import linking
 import tokens
-
-# Enable logging
 import utils
 
+# Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
 
@@ -36,7 +30,7 @@ def start_handler(bot, update):
 	welcome_message = 'שלום וברוכים הבאים לבוט הניהול של ערוץ המכירות הטוב בעולם!!(או בישראל)!'
 	update.message.reply_text(welcome_message)
 	update.message.reply_text('מחקה להודעה חדשה בשביל הערוץ')
-	
+
 
 def build_menu(link_labels, shape=None):
 	if shape is None:
@@ -92,7 +86,7 @@ def send(bot, link, user_data, receiver=channel_name):
 	                       text_to_send,
 	                       reply_markup=build_menu(zip(links, default_labels), default_shape),
 	                       parse_mode='HTML')
-	
+
 
 def send_start(bot, update):
 	user = update.message.from_user
@@ -108,28 +102,45 @@ def send_start(bot, update):
 
 
 def description_handle(bot, update, user_data):
-	user_data['desc'] = update.message.text
-	update.message.reply_text(
-			'אוקי, עכשיו שלח את הקישור למוצר'
-	)
-	return LINK
+	link_idx = utils.where_is_link(update.message.text)
+	if not link_idx:
+		user_data['desc'] = update.message.text
+		update.message.reply_text(
+				'אוקי, עכשיו שלח את הקישור למוצר'
+		)
+		return LINK
+	if link_idx and -1 not in link_idx:
+		link_start = link_idx[0]
+		link_end = link_idx[1]
+		the_link = update.message.text[link_start: link_end]
+		user_data['desc'] = update.message.text[:link_start] + ' ' + update.message.text[link_end:]
+		res = link_logic(the_link, update.message.from_user.username, user_data)
+		if res[1] is not None and res[1] != '':
+			update.message.reply_text(res[1])
+		return res[0]
+
+
+def link_logic(link, username, user_data):
+	link = linking.expand_link(link)
+
+	if not linking.is_valid_url(link):
+		response = 'הקישור לא חוקי, הזן קישור עוד פעם. (רק את הקישור החדש)'
+		return LINK, response
+
+	token = tokens.choose_token(username)
+	link = linking.tokenize_link(link, token)
+	user_data['link'] = link
+	return PHOTO, 'יפה, עכשיו הוסף תמונה אם בא לך (אם לא כתוב "ביטול")'
 
 
 def link_handle(bot, update, user_data):
 	link = update.message.text
-	link = linking.expand_link(link)
+	username = update.message.from_user.username
 	
-	if not linking.is_valid_url(link):
-		update.message.reply_text('הקישור לא חוקי, הזן קישור עוד פעם. ')
-		return LINK
-	
-	token = tokens.choose_token(update.message.from_user.username)
-	link = linking.tokenize_link(link, token)
-	user_data['link'] = link
-	
-	update.message.reply_text('יפה, עכשיו הוסף תמונה אם בא לך (אם לא כתוב "ביטול")')
-	
-	return PHOTO
+	res = link_logic(link, username, user_data)
+	if res[1] is not None and res[1] != '':
+		update.message.reply_text(res[1])
+	return res[0]
 
 
 def not_link_handle(bot, update, user_data):
@@ -165,7 +176,7 @@ def photo_handle(bot, update, user_data):
 	else:
 		media_id = update.message.video.file_id
 	return media_handle(bot, update, user_data, media_id)
-	
+
 
 def photo_skip_handle(bot, update, user_data):
 	link = user_data['link']
@@ -207,7 +218,8 @@ def main():
 				                                      Filters.entity(MessageEntity.TEXT_LINK)),
 				                      link_handle, pass_user_data=True),
 				       MessageHandler(Filters.all, callback=not_link_handle, pass_user_data=True)],
-				PHOTO: [MessageHandler(Filters.photo | Filters.animation | Filters.video, photo_handle, pass_user_data=True),
+				PHOTO: [MessageHandler(Filters.photo | Filters.animation | Filters.video, photo_handle,
+				                       pass_user_data=True),
 				        MessageHandler(Filters.all, photo_skip_handle, pass_user_data=True)]
 			},
 			
@@ -215,7 +227,7 @@ def main():
 	)
 	
 	dp.add_handler(conv_handler)
-	dp.add_handler(start_handler)
+	dp.add_handler(CommandHandler('/start', start_handler))
 	
 	updater.start_polling()
 	updater.idle()
