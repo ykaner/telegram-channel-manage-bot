@@ -73,7 +73,7 @@ def build_menu(link_labels, shape=None):
 	return reply_markup
 
 
-def send(bot, link, user_data, receiver=to_send_channel):
+def send(bot, link, user_data, receiver=to_send_channel, add_buttons=True):
 	print('sending')
 	item_link = link
 	item_share = 'https://telegram.me/share/url?url=היי!🤠%0aמצאתי%20מוצר%20שאני%20חושב%20שיעניין%20אותך👇%0a' + item_link
@@ -88,9 +88,13 @@ def send(bot, link, user_data, receiver=to_send_channel):
 		text_to_send = '<a href="' + user_data['photo_link'] + '">&#8205;</a>' + user_data['desc']
 	else:
 		text_to_send = user_data['desc']
+	if add_buttons:
+		menu_markup = build_menu(zip(links, default_labels), default_shape)
+	else:
+		menu_markup = None
 	mes = bot.send_message(receiver,
 	                       text_to_send,
-	                       reply_markup=build_menu(zip(links, default_labels), default_shape),
+	                       reply_markup=menu_markup,
 	                       parse_mode='HTML')
 
 
@@ -105,6 +109,13 @@ def send_start(bot, update):
 			'שלום {}, שלח את המוצר'.format(user.username)
 	)
 	return DESCRIPTION
+
+
+def confirmation(bot, update, user_data):
+	send(bot, user_data['link'], user_data, receiver=update.message.from_user.id, add_buttons=False)
+	custom_keyboard = [['אישור', 'ביטול']]
+	reply_keyboard = telegram.ReplyKeyboardMarkup(custom_keyboard)
+	return reply_keyboard
 
 
 def media_handle(bot, update, user_data, media_id):
@@ -128,8 +139,10 @@ def photo_handle(bot, update, user_data):
 		media_id = update.message.video.file_id
 	media_handle(bot, update, user_data, media_id)
 	res = description_logic(update.message.caption, update.message.from_user.username, user_data)
+	if res[0] == CONFIRM:
+		reply_keyboard = confirmation(bot, update, user_data)
 	if res[1] is not None and res[1] != '':
-		update.message.reply_text(res[1])
+		update.message.reply_text(res[1], reply_markup=reply_keyboard)
 	return res[0]
 
 
@@ -150,8 +163,10 @@ def description_logic(text, username, user_data):
 
 def description_handle(bot, update, user_data):
 	res = description_logic(update.message.text, update.message.from_user.username, user_data)
+	if res[0] == CONFIRM:
+		reply_keyboard = confirmation(bot, update, user_data)
 	if res[1] is not None and res[1] != '':
-		update.message.reply_text(res[1])
+		update.message.reply_text(res[1], reply_markup=reply_keyboard)
 	return res[0]
 
 
@@ -177,11 +192,10 @@ def link_handle(bot, update, user_data):
 	res = link_logic(link, username, user_data)
 	reply_keyboard = None
 	if res[0] == CONFIRM:
-		send(bot, user_data['link'], user_data, receiver=update.message.from_user.id)
-		custom_keyboard = [['אישור', 'ביטול']]
-		reply_keyboard = telegram.ReplyKeyboardMarkup(custom_keyboard)
+		reply_keyboard = confirmation(bot, update, user_data)
 	if res[1] is not None and res[1] != '':
 		update.message.reply_text(res[1], reply_markup=reply_keyboard)
+
 	return res[0]
 
 
@@ -222,6 +236,7 @@ def final_choice(bot, update, user_data):
 		confirmed(bot, update, user_data)
 	elif choice == 'ביטול':
 		cancel(bot, update, user_data)
+	return ConversationHandler.END
 
 
 # states of the conversation
