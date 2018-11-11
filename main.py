@@ -2,6 +2,7 @@
 import logging
 import os
 
+import telegram
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, MessageEntity
 from telegram.ext import Updater, CommandHandler, ConversationHandler, MessageHandler, Filters
 import argparse
@@ -174,8 +175,13 @@ def link_handle(bot, update, user_data):
 	username = update.message.from_user.username
 	
 	res = link_logic(link, username, user_data)
+	reply_keyboard = None
+	if res[0] == CONFIRM:
+		send(bot, user_data['link'], user_data, receiver=update.message.from_user.username)
+		custom_keyboard = ['אישור', 'ביטול']
+		reply_keyboard = telegram.ReplyKeyboardMarkup(custom_keyboard)
 	if res[1] is not None and res[1] != '':
-		update.message.reply_text(res[1])
+		update.message.reply_text(res[1], reply_markup=reply_keyboard)
 	return res[0]
 
 
@@ -187,7 +193,7 @@ def not_link_handle(bot, update, user_data):
 def confirmed(bot, update, user_data):
 	link = user_data['link']
 	send(bot, link, user_data)
-	update.message.reply_text('ההודעה נשלחה בהצלחה!')
+	update.message.reply_text('ההודעה נשלחה בהצלחה!', reply_markup=telegram.ReplyKeyboardRemove())
 	user_data.clear()
 	return ConversationHandler.END
 
@@ -205,7 +211,7 @@ def photo_skip_handle(bot, update, user_data):
 
 
 def cancel(bot, update, user_data):
-	update.message.reply_text('בוטל!')
+	update.message.reply_text('בוטל!', reply_markup=telegram.ReplyKeyboardRemove())
 	for k in user_data:
 		del user_data[k]
 	user_data.clear()
@@ -245,7 +251,8 @@ def main():
 				                                      Filters.entity(MessageEntity.TEXT_LINK)),
 				                      link_handle, pass_user_data=True),
 				       MessageHandler(Filters.all, callback=not_link_handle, pass_user_data=True)],
-				CONFIRM: [MessageHandler(Filters.text, confirmed, pass_user_data=True)]
+				CONFIRM: [MessageHandler('אישור', confirmed, pass_user_data=True),
+				          MessageHandler('ביטול', cancel, pass_user_data=True)]
 			},
 			
 			fallbacks=[CommandHandler('cancel', cancel, pass_user_data=True)],
