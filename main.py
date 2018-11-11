@@ -177,8 +177,8 @@ def link_handle(bot, update, user_data):
 	res = link_logic(link, username, user_data)
 	reply_keyboard = None
 	if res[0] == CONFIRM:
-		send(bot, user_data['link'], user_data, receiver=update.message.from_user.username)
-		custom_keyboard = ['אישור', 'ביטול']
+		send(bot, user_data['link'], user_data, receiver=update.message.from_user.id)
+		custom_keyboard = [['אישור', 'ביטול']]
 		reply_keyboard = telegram.ReplyKeyboardMarkup(custom_keyboard)
 	if res[1] is not None and res[1] != '':
 		update.message.reply_text(res[1], reply_markup=reply_keyboard)
@@ -218,6 +218,14 @@ def cancel(bot, update, user_data):
 	return ConversationHandler.END
 
 
+def final_choice(bot, update, user_data):
+	choice = update.message.text
+	if choice == 'אישור':
+		confirmed(bot, update, user_data)
+	elif choice == 'ביטול':
+		cancel(bot, update, user_data)
+
+
 # states of the conversation
 DESCRIPTION, LINK, CONFIRM = range(3)
 
@@ -251,8 +259,7 @@ def main():
 				                                      Filters.entity(MessageEntity.TEXT_LINK)),
 				                      link_handle, pass_user_data=True),
 				       MessageHandler(Filters.all, callback=not_link_handle, pass_user_data=True)],
-				CONFIRM: [MessageHandler('אישור', confirmed, pass_user_data=True),
-				          MessageHandler('ביטול', cancel, pass_user_data=True)]
+				CONFIRM: [MessageHandler(Filters.text, final_choice, pass_user_data=True)]
 			},
 			
 			fallbacks=[CommandHandler('cancel', cancel, pass_user_data=True)],
