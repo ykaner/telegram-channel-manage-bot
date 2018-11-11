@@ -3,6 +3,7 @@ import os
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, MessageEntity
 from telegram.ext import Updater, CommandHandler, ConversationHandler, MessageHandler, Filters
+import argparse
 
 import linking
 import tokens
@@ -10,7 +11,7 @@ import utils
 
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    level=logging.INFO)
+                    level=logging.DEBUG)
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +19,9 @@ with open('bot_api_token.secret', 'r') as f:
 	bot_api_token = f.read()
 	bot_api_token = bot_api_token.replace('\n', '')
 
-channel_name = '@IsraelShopping'
+original_channel_name = '@IsraelShopping'
+test_channel_name = '@ilshoppingt'
+to_send_channel = test_channel_name
 
 
 def start_handler(bot, update):
@@ -67,7 +70,7 @@ def build_menu(link_labels, shape=None):
 	return reply_markup
 
 
-def send(bot, link, user_data, receiver=channel_name):
+def send(bot, link, user_data, receiver=to_send_channel):
 	print('sending')
 	item_link = link
 	item_share = 'https://telegram.me/share/url?url=היי!🤠%0aמצאתי%20מוצר%20שאני%20חושב%20שיעניין%20אותך👇%0a' + item_link
@@ -203,6 +206,18 @@ DESCRIPTION, LINK, PHOTO = range(3)
 
 
 def main():
+	parser = argparse.ArgumentParser()
+	parser.add_argument('--test', dest='test', action='store_const', type=bool,
+	                    const=True, default=False,
+	                    help='is send on the test channel')
+	args = parser.parse_args()
+	global to_send_channel
+	if args.test:
+		to_send_channel = test_channel_name
+	else:
+		to_send_channel = original_channel_name
+	
+	
 	updater = Updater(token=bot_api_token)
 	
 	dp = updater.dispatcher
