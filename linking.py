@@ -45,12 +45,14 @@ def zipy_prod_by_id(source, pid):
 
 
 def zipy_link_tokenize(link, token):
-	if '/#' in link:
-		idx = link.rindex('/#')
-		link = link[:idx]
 	
-	if link[-1] == '#':
-		link = link[:-1]
+	qdx = link.find('?')
+	if qdx != -1:
+		link = link[:qdx]
+	hdx = link.find('#')
+	if hdx != -1:
+		link = link[:hdx]
+	
 	link += '/#' + token
 	return link
 
