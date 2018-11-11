@@ -212,8 +212,6 @@ def photo_skip_handle(bot, update, user_data):
 
 def cancel(bot, update, user_data):
 	update.message.reply_text('בוטל!', reply_markup=telegram.ReplyKeyboardRemove())
-	for k in user_data:
-		del user_data[k]
 	user_data.clear()
 	return ConversationHandler.END
 
@@ -266,7 +264,7 @@ def main():
 	)
 	
 	dp.add_handler(conv_handler)
-	dp.add_handler(CommandHandler('/start', start_handler))
+	dp.add_handler(CommandHandler('start', start_handler))
 	
 	updater.start_polling()
 	updater.idle()
