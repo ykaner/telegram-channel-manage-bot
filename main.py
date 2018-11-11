@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import logging
 import os
 
@@ -207,7 +208,7 @@ DESCRIPTION, LINK, PHOTO = range(3)
 
 def main():
 	parser = argparse.ArgumentParser()
-	parser.add_argument('--test', dest='test', action='store_const', type=bool,
+	parser.add_argument('--test', dest='test', action='store_const',
 	                    const=True, default=False,
 	                    help='is send on the test channel')
 	args = parser.parse_args()
@@ -216,7 +217,6 @@ def main():
 		to_send_channel = test_channel_name
 	else:
 		to_send_channel = original_channel_name
-	
 	
 	updater = Updater(token=bot_api_token)
 	
