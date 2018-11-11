@@ -5,6 +5,7 @@ import os
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, MessageEntity
 from telegram.ext import Updater, CommandHandler, ConversationHandler, MessageHandler, Filters
 import argparse
+import web_parser
 
 import linking
 import tokens
@@ -12,7 +13,7 @@ import utils
 
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    level=logging.DEBUG)
+                    level=logging.INFO)
 
 logger = logging.getLogger(__name__)
 
@@ -100,28 +101,57 @@ def send_start(bot, update):
 		return ConversationHandler.END
 	
 	update.message.reply_text(
-			'שלום {}, שלח את תיאור המוצר'.format(user.username)
+			'שלום {}, שלח את המוצר'.format(user.username)
 	)
 	return DESCRIPTION
 
 
-def description_handle(bot, update, user_data):
-	link_idx = utils.where_is_link(update.message.text)
+def media_handle(bot, update, user_data, media_id):
+	photo_stream = bot.get_file(media_id)
+	tmp_media_path = '/tmp/il_shopping_bot'
+	utils.create_folder_if_not_exists(tmp_media_path)
+	
+	tmp_path = os.path.join(tmp_media_path, 'anyf.jpg')
+	
+	photo_stream.download(tmp_path)
+	user_data['photo_link'] = linking.telegraph_link_media(tmp_path)
+	os.remove(tmp_path)
+
+
+def photo_handle(bot, update, user_data):
+	if len(update.message.photo) > 0:
+		media_id = update.message.photo[-1].file_id
+	elif update.message.animation is not None:
+		media_id = update.message.animation.file_id
+	else:
+		media_id = update.message.video.file_id
+	media_handle(bot, update, user_data, media_id)
+	res = description_logic(update.message.caption, update.message.from_user.username, user_data)
+	if res[1] is not None and res[1] != '':
+		update.message.reply_text(res[1])
+	return res[0]
+
+
+def description_logic(text, username, user_data):
+	link_idx = utils.where_is_link(text)
 	if not link_idx:
-		user_data['desc'] = update.message.text
-		update.message.reply_text(
-				'אוקי, עכשיו שלח את הקישור למוצר'
-		)
-		return LINK
+		user_data['desc'] = text
+		response = 'אוקי, עכשיו שלח את הקישור למוצר'
+		return LINK, response
 	if link_idx and -1 not in link_idx:
 		link_start = link_idx[0]
 		link_end = link_idx[1]
-		the_link = update.message.text[link_start: link_end]
-		user_data['desc'] = update.message.text[:link_start] + ' ' + update.message.text[link_end:]
-		res = link_logic(the_link, update.message.from_user.username, user_data)
-		if res[1] is not None and res[1] != '':
-			update.message.reply_text(res[1])
-		return res[0]
+		the_link = text[link_start: link_end]
+		user_data['desc'] = text[:link_start] + ' ' + text[link_end:]
+		res = link_logic(the_link, username, user_data)
+		return res
+
+
+def description_handle(bot, update, user_data):
+	res = description_logic(update.message.text, update.message.from_user.username, user_data)
+	if res[1] is not None and res[1] != '':
+		update.message.reply_text(res[1])
+	return res[0]
 
 
 def link_logic(link, username, user_data):
@@ -134,7 +164,9 @@ def link_logic(link, username, user_data):
 	token = tokens.choose_token(username)
 	link = linking.tokenize_link(link, token)
 	user_data['link'] = link
-	return PHOTO, 'יפה, עכשיו הוסף תמונה אם בא לך (אם לא כתוב "ביטול")'
+	if 'photo_link' not in user_data:  # photo was not passed so need to get from zipy site
+		user_data['photo_link'] = web_parser.telegraph_link_from_zipy_site(link)
+	return CONFIRM, 'יפה, עכשיו נשאר לך רק לאמת ולשלוח!'
 
 
 def link_handle(bot, update, user_data):
@@ -152,34 +184,12 @@ def not_link_handle(bot, update, user_data):
 	return LINK
 
 
-def media_handle(bot, update, user_data, media_id):
-	photo_stream = bot.get_file(media_id)
-	tmp_media_path = '/tmp/il_shopping_bot'
-	utils.create_folder_if_not_exists(tmp_media_path)
-	
-	tmp_path = os.path.join(tmp_media_path, 'anyf.jpg')
-	
-	photo_stream.download(tmp_path)
-	user_data['photo_link'] = linking.telegraph_link_media(tmp_path)
-	os.remove(tmp_path)
-	
+def confirmed(bot, update, user_data):
 	link = user_data['link']
 	send(bot, link, user_data)
-	
 	update.message.reply_text('ההודעה נשלחה בהצלחה!')
-	
 	user_data.clear()
 	return ConversationHandler.END
-
-
-def photo_handle(bot, update, user_data):
-	if len(update.message.photo) > 0:
-		media_id = update.message.photo[-1].file_id
-	elif update.message.animation is not None:
-		media_id = update.message.animation.file_id
-	else:
-		media_id = update.message.video.file_id
-	return media_handle(bot, update, user_data, media_id)
 
 
 def photo_skip_handle(bot, update, user_data):
@@ -203,17 +213,17 @@ def cancel(bot, update, user_data):
 
 
 # states of the conversation
-DESCRIPTION, LINK, PHOTO = range(3)
+DESCRIPTION, LINK, CONFIRM = range(3)
 
 
 def main():
 	parser = argparse.ArgumentParser()
-	parser.add_argument('--test', dest='test', action='store_const',
+	parser.add_argument('--original', dest='original', action='store_const',
 	                    const=True, default=False,
 	                    help='is send on the test channel')
 	args = parser.parse_args()
 	global to_send_channel
-	if args.test:
+	if not args.original:
 		to_send_channel = test_channel_name
 	else:
 		to_send_channel = original_channel_name
@@ -227,15 +237,15 @@ def main():
 			entry_points=[CommandHandler('send', send_start, pass_user_data=False)],
 			
 			states={
-				DESCRIPTION: [MessageHandler(Filters.text, description_handle, pass_user_data=True)],
+				DESCRIPTION: [MessageHandler(Filters.text, description_handle, pass_user_data=True),
+				              MessageHandler(Filters.photo | Filters.animation | Filters.video,
+				                             photo_handle, pass_user_data=True)],
 				
 				LINK: [MessageHandler(Filters.text & (Filters.entity(MessageEntity.URL) |
 				                                      Filters.entity(MessageEntity.TEXT_LINK)),
 				                      link_handle, pass_user_data=True),
 				       MessageHandler(Filters.all, callback=not_link_handle, pass_user_data=True)],
-				PHOTO: [MessageHandler(Filters.photo | Filters.animation | Filters.video, photo_handle,
-				                       pass_user_data=True),
-				        MessageHandler(Filters.all, photo_skip_handle, pass_user_data=True)]
+				CONFIRM: [MessageHandler(Filters.text, confirmed, pass_user_data=True)]
 			},
 			
 			fallbacks=[CommandHandler('cancel', cancel, pass_user_data=True)],
