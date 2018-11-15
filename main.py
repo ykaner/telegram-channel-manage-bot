@@ -139,6 +139,7 @@ def photo_handle(bot, update, user_data):
 		media_id = update.message.video.file_id
 	media_handle(bot, update, user_data, media_id)
 	res = description_logic(update.message.caption, update.message.from_user.username, user_data)
+	reply_keyboard = None
 	if res[0] == CONFIRM:
 		reply_keyboard = confirmation(bot, update, user_data)
 	if res[1] is not None and res[1] != '':
@@ -163,6 +164,7 @@ def description_logic(text, username, user_data):
 
 def description_handle(bot, update, user_data):
 	res = description_logic(update.message.text, update.message.from_user.username, user_data)
+	reply_keyboard = None
 	if res[0] == CONFIRM:
 		reply_keyboard = confirmation(bot, update, user_data)
 	if res[1] is not None and res[1] != '':
@@ -264,6 +266,7 @@ def main():
 			entry_points=[CommandHandler('send', send_start, pass_user_data=False)],
 			
 			states={
+				
 				DESCRIPTION: [MessageHandler(Filters.text, description_handle, pass_user_data=True),
 				              MessageHandler(Filters.photo | Filters.animation | Filters.video,
 				                             photo_handle, pass_user_data=True)],
