@@ -246,7 +246,7 @@ DESCRIPTION, LINK, CONFIRM = range(3)
 def main():
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--original', dest='original', action='store_const',
-	                    const=False, default=True,
+	                    const=True, default=False,
 	                    help='is send on the test channel')
 	args = parser.parse_args()
 	global to_send_channel
@@ -275,7 +275,7 @@ def main():
 				CONFIRM: [MessageHandler(Filters.text, final_choice, pass_user_data=True)]
 			},
 			
-			fallbacks=[CommandHandler('cancel', cancel, pass_user_data=True)],
+			fallbacks=[CommandHandler('cancel', cancel, pass_user_data=True)]
 	)
 	
 	dp.add_handler(conv_handler)

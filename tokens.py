@@ -30,8 +30,7 @@ def choose_token(sender):
 	for k in owners:
 		areas.append(owners[k][0] * free_area)
 		area_tokens.append(owners[k][1])
-	areas = np.array(areas)
-	assert areas[-1] <= 1
+	assert sum(areas) == 1
 	token = np.random.choice(area_tokens, 1, p=areas)[0]
 	return token
 	
