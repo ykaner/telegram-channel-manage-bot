@@ -35,7 +35,7 @@ def start_handler(bot, update):
 	
 	welcome_message = 'שלום וברוכים הבאים לבוט הניהול של ערוץ המכירות הטוב בעולם!!(או בישראל)!'
 	update.message.reply_text(welcome_message)
-	update.message.reply_text('מחקה להודעה חדשה בשביל הערוץ')
+	update.message.reply_text('מחכה להודעה חדשה בשביל הערוץ')
 
 
 def build_menu(link_labels, shape=None):
@@ -246,7 +246,7 @@ DESCRIPTION, LINK, CONFIRM = range(3)
 def main():
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--original', dest='original', action='store_const',
-	                    const=True, default=False,
+	                    const=False, default=True,
 	                    help='is send on the test channel')
 	args = parser.parse_args()
 	global to_send_channel
