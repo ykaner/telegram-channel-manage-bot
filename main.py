@@ -1,16 +1,18 @@
 # -*- coding: utf-8 -*-
+import argparse
 import logging
 import os
 
 import telegram
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, MessageEntity
+from telegram.error import (TelegramError, Unauthorized, BadRequest,
+                            TimedOut, ChatMigrated, NetworkError)
 from telegram.ext import Updater, CommandHandler, ConversationHandler, MessageHandler, Filters
-import argparse
-import web_parser
 
 import linking
 import tokens
 import utils
+import web_parser
 
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -176,11 +178,11 @@ def description_handle(bot, update, user_data):
 
 def link_logic(link, username, user_data):
 	link = linking.expand_link(link)
-
+	
 	if not linking.is_valid_url(link):
 		response = 'הקישור לא חוקי, הזן קישור עוד פעם. (רק את הקישור החדש)'
 		return LINK, response
-
+	
 	token = tokens.choose_token(username)
 	link = linking.tokenize_link(link, token)
 	user_data['link'] = link
@@ -199,7 +201,7 @@ def link_handle(bot, update, user_data):
 		reply_keyboard = confirmation(bot, update, user_data)
 	if res[1] is not None and res[1] != '':
 		update.message.reply_text(res[1], reply_markup=reply_keyboard)
-
+	
 	return res[0]
 
 
@@ -243,6 +245,33 @@ def final_choice(bot, update, user_data):
 	return ConversationHandler.END
 
 
+def error_callback(bot, update, error):
+	print(update)
+	bot.send_message('@ilsbotdebug', 'error occured\n' + error.message)
+	try:
+		raise error
+	except Unauthorized:
+		pass
+	# remove update.message.chat_id from conversation list
+	except BadRequest:
+		pass
+	# handle malformed requests - read more below!
+	except TimedOut:
+		pass
+	# handle slow connection problems
+	except NetworkError:
+		pass
+	# handle other connection problems
+	except ChatMigrated as e:
+		pass
+	# the chat_id of a group has changed, use e.new_chat_id instead
+	except TelegramError:
+		pass
+	finally:
+		print(update)
+		bot.send_message('@ilsbotdebug', 'finally error occured\n' + error.message)
+
+
 # states of the conversation
 DESCRIPTION, LINK, CONFIRM = range(3)
 
@@ -252,14 +281,22 @@ def main():
 	parser.add_argument('--original', dest='original', action='store_const',
 	                    const=True, default=False,
 	                    help='is send on the test channel')
+	parser.add_argument('--testbot', dest='testbot', action='store_const',
+	                    const=True, default=False,
+	                    help='is run the program on a test bot')
 	args = parser.parse_args()
 	print(args.original)
 	global to_send_channel
+	global bot_api_token
 	if not args.original:
 		to_send_channel = test_channel_name
 	else:
 		to_send_channel = original_channel_name
 	print(to_send_channel)
+	if args.testbot:
+		print('using the testbot')
+		bot_api_token = '622824179:AAFpF-Jv5eQe8_InpgCMxa2txwdYbdA9koE'
+	
 	updater = Updater(token=bot_api_token)
 	
 	dp = updater.dispatcher
@@ -286,6 +323,7 @@ def main():
 	
 	dp.add_handler(conv_handler)
 	dp.add_handler(CommandHandler('start', start_handler))
+	dp.add_error_handler(error_callback)
 	
 	updater.start_polling()
 	updater.idle()

@@ -22,6 +22,7 @@ def is_zipy(link):
 
 
 def expand_link(link):
+	link = urlparse.quote(link.encode('utf8'), ':/#?')
 	return request.urlopen(link).url
 
 
