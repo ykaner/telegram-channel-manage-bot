@@ -38,6 +38,7 @@ def telegraph_link_from_zipy_site(link):
 	image_link = parser.image_link
 	if image_link is None:
 		print('image not found')
+		return None
 	img_resp = urllib.request.urlopen(image_link)
 	tmp_media_path = '/tmp/il_shopping_bot'
 	utils.create_folder_if_not_exists(tmp_media_path)

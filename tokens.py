@@ -5,9 +5,9 @@ developer_fee = [0.1, 'yk12953']
 
 
 senders = {
-	'ykaner': [0.3, 'yk12953'],
-	'NoamH': [1, '2'],
-	'rotemsd': [1, '10'],
+	'ykaner': [0.4, 'yk12953'],
+	'NoamH': [0.9, '2'],
+	'rotemsd': [0.9, '10'],
 	'ohad1': [0.2, 'yk12953'],
 	'duperyuyu': [0.7, 'duper']
 }
@@ -20,9 +20,6 @@ owners = {
 
 
 def choose_token(sender):
-	if sender in owners:
-		return owners[sender][1]
-	
 	areas = [developer_fee[0],
 	         senders[sender][0]]
 	area_tokens = ['yk12953', senders[sender][1]]

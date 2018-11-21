@@ -23,7 +23,10 @@ def is_zipy(link):
 
 def expand_link(link):
 	link = urlparse.quote(link.encode('utf8'), ':/#?')
-	return request.urlopen(link).url
+	link = request.urlopen(link).url
+	if not urlparse.urlparse(link).scheme:
+		link = 'https://' + link
+	return link
 
 
 def telegraph_link_media(media):
@@ -42,7 +45,7 @@ def prod_id_from_ali(link):
 
 
 def zipy_prod_by_id(source, pid):
-	return 'www.zipy.co.il/p/' + source + '/-/' + str(pid)
+	return 'https://www.zipy.co.il/p/' + source + '/-/' + str(pid)
 
 
 def zipy_link_tokenize(link, token):

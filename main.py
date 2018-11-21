@@ -187,7 +187,9 @@ def link_logic(link, username, user_data):
 	link = linking.tokenize_link(link, token)
 	user_data['link'] = link
 	if 'photo_link' not in user_data:  # photo was not passed so need to get from zipy site
-		user_data['photo_link'] = web_parser.telegraph_link_from_zipy_site(link)
+		photo_link = web_parser.telegraph_link_from_zipy_site(link)
+		if photo_link is not None:
+			user_data['photo_link'] = photo_link
 	return CONFIRM, 'יפה, עכשיו נשאר לך רק לאמת ולשלוח!'
 
 
@@ -268,8 +270,9 @@ def error_callback(bot, update, error):
 	except TelegramError:
 		pass
 	finally:
-		print(update)
-		bot.send_message('@ilsbotdebug', 'finally error occured\n' + error.message)
+		pass
+		# print(update)
+		# bot.send_message('@ilsbotdebug', 'finally error occured\n' + error.message)
 
 
 # states of the conversation
