@@ -10,6 +10,7 @@ from telegram.error import (TelegramError, Unauthorized, BadRequest,
 from telegram.ext import Updater, CommandHandler, ConversationHandler, MessageHandler, Filters
 
 import linking
+import resourses
 import tokens
 import utils
 import web_parser
@@ -102,6 +103,11 @@ def send(bot, link, user_data, receiver=None, add_buttons=True):
 	                       parse_mode='HTML')
 
 
+def timer_send(bot, job):
+	ud = job.context
+	send(bot, ud['link'], ud, receiver=ud['receiver'])
+
+
 def send_start(bot, update):
 	user = update.message.from_user
 	
@@ -117,9 +123,24 @@ def send_start(bot, update):
 
 def confirmation(bot, update, user_data):
 	send(bot, user_data['link'], user_data, receiver=update.message.from_user.id, add_buttons=False)
-	custom_keyboard = [['אישור', 'ביטול']]
+	custom_keyboard = [[resourses.confirm, resourses.cancel], [resourses.timer]]
 	reply_keyboard = telegram.ReplyKeyboardMarkup(custom_keyboard)
 	return reply_keyboard
+
+
+def timer_confirmed(bot, update, user_data, job_queue):
+	if utils.spell_time(update.message.text) is None:
+		update.message.reply_text('הזמן לא מובן, בבקשה כתוב עוד פעם בפורמט הנכון:\n'
+		                          'ימים שעות דקות')
+		return TIMER
+	
+	delay_time = utils.spell_time(update.message.text)
+	context = user_data.copy()
+	context['receiver'] = to_send_channel
+	job_queue.run_once(timer_send, delay_time, context=context)
+	update.message.reply_text('ההודעה תוזמנה ותישלח בעתיד!', reply_markup=telegram.ReplyKeyboardRemove())
+	user_data.clear()
+	return ConversationHandler.END
 
 
 def media_handle(bot, update, user_data, media_id):
@@ -240,10 +261,14 @@ def cancel(bot, update, user_data):
 
 def final_choice(bot, update, user_data):
 	choice = update.message.text
-	if choice == 'אישור':
+	if choice == resourses.confirm:
 		confirmed(bot, update, user_data)
-	elif choice == 'ביטול':
+	elif choice == resourses.cancel:
 		cancel(bot, update, user_data)
+	elif choice == resourses.timer:
+		update.message.reply_text('עוד כמה זמן לשלוח\n הכנס את הפרטים: ימים שעות דקות',
+		                          reply_markup=telegram.ReplyKeyboardRemove())
+		return TIMER
 	return ConversationHandler.END
 
 
@@ -271,12 +296,12 @@ def error_callback(bot, update, error):
 		pass
 	finally:
 		pass
-		# print(update)
-		# bot.send_message('@ilsbotdebug', 'finally error occured\n' + error.message)
+	# print(update)
+	# bot.send_message('@ilsbotdebug', 'finally error occured\n' + error.message)
 
 
 # states of the conversation
-DESCRIPTION, LINK, CONFIRM = range(3)
+DESCRIPTION, LINK, CONFIRM, TIMER = range(4)
 
 
 def main():
@@ -318,7 +343,8 @@ def main():
 				                                      Filters.entity(MessageEntity.TEXT_LINK)),
 				                      link_handle, pass_user_data=True),
 				       MessageHandler(Filters.all, callback=not_link_handle, pass_user_data=True)],
-				CONFIRM: [MessageHandler(Filters.text, final_choice, pass_user_data=True)]
+				CONFIRM: [MessageHandler(Filters.text, final_choice, pass_user_data=True)],
+				TIMER: [MessageHandler(Filters.text, timer_confirmed, pass_user_data=True, pass_job_queue=True)]
 			},
 			
 			fallbacks=[CommandHandler('cancel', cancel, pass_user_data=True)]
