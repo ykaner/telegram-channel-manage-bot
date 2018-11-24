@@ -11,6 +11,7 @@ from telegram.ext import Updater, CommandHandler, ConversationHandler, MessageHa
 
 import linking
 import resourses
+import teleutils
 import tokens
 import utils
 import web_parser
@@ -155,6 +156,7 @@ def media_handle(bot, update, user_data, media_id):
 	os.remove(tmp_path)
 
 
+@teleutils.send_typing_action
 def photo_handle(bot, update, user_data):
 	if len(update.message.photo) > 0:
 		media_id = update.message.photo[-1].file_id
@@ -187,6 +189,7 @@ def description_logic(text, username, user_data):
 		return res
 
 
+@teleutils.send_typing_action
 def description_handle(bot, update, user_data):
 	res = description_logic(update.message.text, update.message.from_user.username, user_data)
 	reply_keyboard = None
@@ -214,6 +217,7 @@ def link_logic(link, username, user_data):
 	return CONFIRM, 'יפה, עכשיו נשאר לך רק לאמת ולשלוח!'
 
 
+@teleutils.send_typing_action
 def link_handle(bot, update, user_data):
 	link = update.message.text
 	username = update.message.from_user.username
@@ -296,8 +300,10 @@ def error_callback(bot, update, error):
 		pass
 	finally:
 		pass
-	# print(update)
-	# bot.send_message('@ilsbotdebug', 'finally error occured\n' + error.message)
+
+
+# print(update)
+# bot.send_message('@ilsbotdebug', 'finally error occured\n' + error.message)
 
 
 # states of the conversation
@@ -339,15 +345,18 @@ def main():
 				              MessageHandler(Filters.photo | Filters.animation | Filters.video,
 				                             photo_handle, pass_user_data=True)],
 				
-				LINK: [MessageHandler(Filters.text & (Filters.entity(MessageEntity.URL) |
-				                                      Filters.entity(MessageEntity.TEXT_LINK)),
+				LINK: [MessageHandler((Filters.text & (Filters.entity(MessageEntity.URL) |
+				                                       Filters.entity(MessageEntity.TEXT_LINK))) &
+				                      (~ Filters.command),
 				                      link_handle, pass_user_data=True),
-				       MessageHandler(Filters.all, callback=not_link_handle, pass_user_data=True)],
+				       MessageHandler(~ (Filters.command | teleutils.filter_cancel), callback=not_link_handle,
+				                      pass_user_data=True)],
 				CONFIRM: [MessageHandler(Filters.text, final_choice, pass_user_data=True)],
 				TIMER: [MessageHandler(Filters.text, timer_confirmed, pass_user_data=True, pass_job_queue=True)]
 			},
 			
-			fallbacks=[CommandHandler('cancel', cancel, pass_user_data=True)]
+			fallbacks=[CommandHandler('cancel', cancel, pass_user_data=True),
+			           MessageHandler(teleutils.filter_cancel, cancel, pass_user_data=True)]
 	)
 	
 	dp.add_handler(conv_handler)

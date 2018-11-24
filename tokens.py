@@ -51,5 +51,6 @@ if __name__ == '__main__':
 		tok = choose_token('duperyuyu')
 		if tok not in cnt:
 			cnt[tok] = 1
-		cnt[tok] += 1
+		else:
+			cnt[tok] += 1
 	print(cnt)
