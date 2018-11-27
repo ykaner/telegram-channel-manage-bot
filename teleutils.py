@@ -30,3 +30,10 @@ def send_action(action):
 
 
 send_typing_action = send_action(ChatAction.TYPING)
+
+
+def log(bot, message, to_send=None):
+	if to_send is None:
+		to_send = '@ilshoppingbotlog'
+	bot.send_message(to_send, message)
+

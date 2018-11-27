@@ -49,7 +49,6 @@ def zipy_prod_by_id(source, pid):
 
 
 def zipy_link_tokenize(link, token):
-	
 	qdx = link.find('?')
 	if qdx != -1:
 		link = link[:qdx]
@@ -71,3 +70,9 @@ def tokenize_link(link, token):
 	
 	link = zipy_link_tokenize(link, token)
 	return link
+
+
+if __name__ == '__main__':
+	_link = ''
+	_token = 'yk12953'
+	print(tokenize_link(_link, _token))

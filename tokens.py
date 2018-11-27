@@ -8,8 +8,9 @@ senders = {
 	'ykaner': [0.4, 'yk12953'],
 	'NoamH': [0.9, '2'],
 	'rotemsd': [0.9, '10'],
-	'ohad1': [0.2, 'yk12953'],
-	'duperyuyu': [0.7, 'duper']
+	'ohad1': [0.24, 'yk12953'],
+	'duperyuyu': [0.7, 'duper'],
+	'@IBA10': [0.5, 'buying']
 }
 
 

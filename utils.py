@@ -2,6 +2,7 @@ import os
 import random
 import re
 import datetime
+import teleutils
 
 
 def in_chance(prob):
@@ -43,3 +44,19 @@ def spell_time(time_str):
 	minutes = int(minutes)
 	
 	return ((days * 24 + hours) * 60 + minutes) * 60
+
+
+def log(bot, message, to_send=None):
+	if to_send is None:
+		to_send = '@ilshoppingbotlog'
+	
+	message = str(datetime.datetime.now()) + ': ' + message
+	with open('log.txt', 'a') as f:
+		f.write(message)
+	
+	teleutils.log(bot, message, to_send)
+
+
+# if __name__ == '__main__':
+# 	log('helo')
+

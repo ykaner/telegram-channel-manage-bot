@@ -102,6 +102,9 @@ def send(bot, link, user_data, receiver=None, add_buttons=True):
 	                       text_to_send,
 	                       reply_markup=menu_markup,
 	                       parse_mode='HTML')
+	
+	if mes.chat.type == 'channel':
+		utils.log(bot, 'send message to {} with the token {}'.format(receiver, user_data['token']))
 
 
 def timer_send(bot, job):
@@ -208,6 +211,7 @@ def link_logic(link, username, user_data):
 		return LINK, response
 	
 	token = tokens.choose_token(username)
+	user_data['token'] = token
 	link = linking.tokenize_link(link, token)
 	user_data['link'] = link
 	if 'photo_link' not in user_data:  # photo was not passed so need to get from zipy site
