@@ -10,7 +10,7 @@ senders = {
 	'rotemsd': [0.9, '10'],
 	'ohad1': [0.24, 'yk12953'],
 	'duperyuyu': [0.7, 'duper'],
-	'@IBA10': [0.5, 'buying']
+	'iba10': [0.5, 'buying']
 }
 
 
