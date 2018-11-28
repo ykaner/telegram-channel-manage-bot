@@ -2,6 +2,7 @@ import os
 import urllib.parse as urlparse
 import urllib.request as request
 
+from pyshorteners import Shortener
 from telegraph.upload import upload_file
 
 
@@ -69,6 +70,22 @@ def tokenize_link(link, token):
 		link = zipy_prod_by_id('aliexpress', pid)
 	
 	link = zipy_link_tokenize(link, token)
+	# link = shorten_link(link)
+	return link
+
+
+_shortener = Shortener('Isgd')
+
+
+def shorten_link(link):
+	short = None
+	for i in range(3):
+		try:
+			short = _shortener.short(link)
+		except Exception:
+			pass
+		if short is not None:
+			return short
 	return link
 
 

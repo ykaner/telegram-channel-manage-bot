@@ -77,10 +77,14 @@ def build_menu(link_labels, shape=None):
 	return reply_markup
 
 
-def send(bot, link, user_data, receiver=None, add_buttons=True):
+def send(bot, user_data, receiver=None, add_buttons=True):
 	if receiver is None:
 		receiver = to_send_channel
 	print('sending to ' + str(receiver))
+	if 'short_link' in user_data:
+		link = user_data['short_link']
+	else:
+		link = user_data['link']
 	item_link = link
 	item_share = 'https://telegram.me/share/url?url=היי!🤠%0aמצאתי%20מוצר%20שאני%20חושב%20שיעניין%20אותך👇%0a' + item_link
 	default_shape = [1, 2]
@@ -109,7 +113,7 @@ def send(bot, link, user_data, receiver=None, add_buttons=True):
 
 def timer_send(bot, job):
 	ud = job.context
-	send(bot, ud['link'], ud, receiver=ud['receiver'])
+	send(bot, ud, receiver=ud['receiver'])
 
 
 def send_start(bot, update):
@@ -126,7 +130,7 @@ def send_start(bot, update):
 
 
 def confirmation(bot, update, user_data):
-	send(bot, user_data['link'], user_data, receiver=update.message.from_user.id, add_buttons=False)
+	send(bot, user_data, receiver=update.message.from_user.id, add_buttons=False)
 	custom_keyboard = [[resourses.confirm, resourses.cancel], [resourses.timer]]
 	reply_keyboard = telegram.ReplyKeyboardMarkup(custom_keyboard)
 	return reply_keyboard
@@ -214,6 +218,9 @@ def link_logic(link, username, user_data):
 	user_data['token'] = token
 	link = linking.tokenize_link(link, token)
 	user_data['link'] = link
+	short_link = linking.shorten_link(link)
+	if short_link != link:
+		user_data['short_link'] = short_link
 	if 'photo_link' not in user_data:  # photo was not passed so need to get from zipy site
 		photo_link = web_parser.telegraph_link_from_zipy_site(link)
 		if photo_link is not None:
@@ -243,7 +250,7 @@ def not_link_handle(bot, update, user_data):
 
 def confirmed(bot, update, user_data):
 	link = user_data['link']
-	send(bot, link, user_data)
+	send(bot, user_data)
 	update.message.reply_text('ההודעה נשלחה בהצלחה!', reply_markup=telegram.ReplyKeyboardRemove())
 	user_data.clear()
 	return ConversationHandler.END
@@ -253,7 +260,7 @@ def photo_skip_handle(bot, update, user_data):
 	link = user_data['link']
 	if 'photo_link' in user_data:
 		del user_data['photo_link']
-	send(bot, link, user_data)
+	send(bot, user_data)
 	
 	update.message.reply_text('ההודעה נשלחה בהצלחה!')
 	
