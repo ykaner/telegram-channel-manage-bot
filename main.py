@@ -33,7 +33,7 @@ to_send_channel = test_channel_name
 
 def start_handler(bot, update):
 	user = update.message.from_user
-	if user.username not in tokens.senders:
+	if user.username.lower() not in tokens.senders:
 		update.message.reply_text('Sorry, but you have no permission to use this bot')
 		return
 	
@@ -89,7 +89,7 @@ def send(bot, user_data, receiver=None, add_buttons=True):
 	item_share = 'https://telegram.me/share/url?url=היי!🤠%0aמצאתי%20מוצר%20שאני%20חושב%20שיעניין%20אותך👇%0a' + item_link
 	default_shape = [1, 2]
 	default_labels = ['🔥✅ ⬅️  להזמנה- לחצו כאן!! ➡️ ✅🔥',
-	                  '🌐לשיתוף הערוץ🌐',
+	                  '✳️לשיטוף הערוץ✳️',
 	                  '🔗לשיתוף המוצר🔗']
 	links = [item_link,
 	         'https://telegram.me/share/url?url=%D7%94%D7%99%D7%99!%F0%9F%A4%A0%0A%20%0A%D7%A8%D7%A6%D7%99%D7%AA%D7%99%20%D7%9C%D7%A9%D7%AA%D7%A3%20%D7%90%D7%95%D7%AA%D7%9A%20%D7%91%D7%A2%D7%A8%D7%95%D7%A5%20%D7%9E%D7%92%D7%A0%D7%99%D7%91%20%D7%A2%D7%9D%20%D7%9E%D7%95%D7%A6%D7%A8%D7%99%D7%9D%20%D7%96%D7%95%D7%9C%D7%99%D7%9D%20%D7%95%D7%90%D7%99%D7%9B%D7%95%D7%AA%D7%99%D7%99%D7%9D%20%D7%9E%D7%97%D7%95%22%D7%9C%F0%9F%94%A5%F0%9F%98%8D%0A%20%0A%D7%9C%D7%94%D7%A6%D7%98%D7%A8%D7%A4%D7%95%D7%AA%20%D7%9C%D7%A2%D7%A8%D7%95%D7%A5%20%D7%98%D7%9C%D7%92%D7%A8%D7%9D%F0%9F%91%87%0Ahttps://t.me/IsraelShopping%0A%20%0A%D7%9C%D7%94%D7%A6%D7%98%D7%A8%D7%A4%D7%95%D7%AA%20%D7%9C%D7%A7%D7%91%D7%95%D7%A6%D7%AA%20%D7%95%D7%95%D7%90%D7%A6%D7%90%D7%A4%F0%9F%91%87%0AHttp://rebrand.ly/WhatsApp-IsraelShopping',
@@ -119,7 +119,7 @@ def timer_send(bot, job):
 def send_start(bot, update):
 	user = update.message.from_user
 	
-	if user.username not in tokens.senders:
+	if user.username.lower() not in tokens.senders:
 		update.message.reply_text('Sorry, but you have no permission to use this bot')
 		return ConversationHandler.END
 	

@@ -1,26 +1,27 @@
 import utils
 import numpy as np
 
-developer_fee = [0.1, 'yk12953']
+developer_fee = [0.13, 'yk12953']
 
 
 senders = {
-	'ykaner': [0.4, 'yk12953'],
-	'NoamH': [0.9, '2'],
-	'rotemsd': [0.9, '10'],
-	'ohad1': [0.24, 'yk12953'],
+	'ykaner': [0.5, 'yk12953'],
+	'noamh': [1 - developer_fee[0], '2'],
+	'rotemsd': [1 - developer_fee[0], '10'],
+	'ohad1': [0.26, 'yk12953'],
 	'duperyuyu': [0.7, 'duper'],
 	'iba10': [0.5, 'buying']
 }
 
 
 owners = {
-	'NoamH': [0.5, '2'],
+	'noamh': [0.5, '2'],
 	'rotemsd': [0.5, '10']
 }
 
 
 def choose_token(sender):
+	sender = sender.lower()
 	areas = [developer_fee[0],
 	         senders[sender][0]]
 	area_tokens = ['yk12953', senders[sender][1]]
@@ -38,8 +39,8 @@ def choose_token(sender):
 	# 	token = developer_fee[1]
 	# elif utils.in_chance(senders[sender][0]):
 	# 	token = senders[sender][1]
-	# elif utils.in_chance(owners['NoamH'][0]):
-	# 	token = owners['NoamH'][1]
+	# elif utils.in_chance(owners['noamh'][0]):
+	# 	token = owners['noamh'][1]
 	# else:
 	# 	token = owners['rotemsd'][1]
 	# return token
