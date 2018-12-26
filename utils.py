@@ -52,7 +52,7 @@ def log(bot, message, to_send=None):
 	
 	message = str(datetime.datetime.now()) + ': ' + message
 	with open('log.txt', 'a') as f:
-		f.write(message)
+		f.write(message + '\n')
 	
 	teleutils.log(bot, message, to_send)
 

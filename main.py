@@ -108,7 +108,8 @@ def send(bot, user_data, receiver=None, add_buttons=True):
 	                       parse_mode='HTML')
 	
 	if mes.chat.type == 'channel':
-		utils.log(bot, 'send message to {} with the token {}'.format(receiver, user_data['token']))
+		utils.log(bot, 'send message from {} to {} with the token {}'.format(user_data['username'], receiver,
+		                                                                     user_data['token']))
 
 
 def timer_send(bot, job):
@@ -116,7 +117,7 @@ def timer_send(bot, job):
 	send(bot, ud, receiver=ud['receiver'])
 
 
-def send_start(bot, update):
+def send_start(bot, update, user_data):
 	user = update.message.from_user
 	
 	if user.username.lower() not in tokens.senders:
@@ -126,6 +127,9 @@ def send_start(bot, update):
 	update.message.reply_text(
 			'שלום {}, שלח את המוצר'.format(user.username)
 	)
+	
+	user_data['username'] = '@' + user.username
+	
 	return DESCRIPTION
 
 
@@ -165,13 +169,14 @@ def media_handle(bot, update, user_data, media_id):
 
 @teleutils.send_typing_action
 def photo_handle(bot, update, user_data):
-	if len(update.message.photo) > 0:
-		media_id = update.message.photo[-1].file_id
-	elif update.message.animation is not None:
-		media_id = update.message.animation.file_id
-	else:
-		media_id = update.message.video.file_id
-	media_handle(bot, update, user_data, media_id)
+	if user_data['username'] != 'duperyuyu':  # duper is fully %^&$&^% so is not allowed to send photo
+		if len(update.message.photo) > 0:
+			media_id = update.message.photo[-1].file_id
+		elif update.message.animation is not None:
+			media_id = update.message.animation.file_id
+		else:
+			media_id = update.message.video.file_id
+		media_handle(bot, update, user_data, media_id)
 	res = description_logic(update.message.caption, update.message.from_user.username, user_data)
 	reply_keyboard = None
 	if res[0] == CONFIRM:
@@ -348,7 +353,7 @@ def main():
 	
 	# Add conversation handler with the states ...
 	conv_handler = ConversationHandler(
-			entry_points=[CommandHandler('send', send_start, pass_user_data=False)],
+			entry_points=[CommandHandler('send', send_start, pass_user_data=True)],
 			
 			states={
 				
