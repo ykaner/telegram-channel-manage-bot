@@ -1,16 +1,18 @@
 import utils
 import numpy as np
+import os
+import json
 
-developer_fee = [0.13, 'yk12953']
+developer_fee = [0.12, 'yk12953']
 
 
 senders = {
-	'ykaner': [0.5, 'yk12953'],
+	'ykaner': [0.54, 'yk12953'],
 	'noamh': [1 - developer_fee[0], '2'],
 	'rotemsd': [1 - developer_fee[0], '10'],
-	'ohad1': [0.26, 'yk12953'],
+	# 'ohad1': [0.26, 'yk12953'],
 	'duperyuyu': [0.7, 'duper'],
-	'iba10': [0.5, 'buying']
+	'Israel_Ben_Ari': [0.5, 'buying']
 }
 
 
@@ -18,6 +20,24 @@ owners = {
 	'noamh': [0.5, '2'],
 	'rotemsd': [0.5, '10']
 }
+
+
+token_data_f = 'token_data'
+senders_f = 'senders.json'
+owners_f = 'owners.json'
+utils.create_folder_if_not_exists(token_data_f)
+if not os.path.exists(os.path.join(token_data_f, senders_f)):
+	with open(os.path.join(token_data_f, senders_f), 'w') as f:
+		json.dump(senders, f, indent='\t')
+else:
+	with open(os.path.join(token_data_f, senders_f), 'r') as f:
+		senders = json.load(f)
+if not os.path.exists(os.path.join(token_data_f, owners_f)):
+	with open(os.path.join(token_data_f, owners_f), 'w') as f:
+		json.dump(senders, f, indent='\t')
+else:
+	with open(os.path.join(token_data_f, owners_f), 'r') as f:
+		senders = json.load(f)
 
 
 def choose_token(sender):

@@ -20,8 +20,8 @@ def where_is_link(text):
 def create_folder_if_not_exists(path):
 	if os.path.exists(path):
 		return
-	create_folder_if_not_exists(os.path.dirname(path))
-	os.mkdir(path)
+	os.makedirs(path)
+	return
 
 
 def spell_time(time_str):
