@@ -169,7 +169,7 @@ def media_handle(bot, update, user_data, media_id):
 
 @teleutils.send_typing_action
 def photo_handle(bot, update, user_data):
-	if user_data['username'] != 'duperyuyu':  # duper is fully %^&$&^% so is not allowed to send photo
+	if user_data['username'] != '@duperyuyu':  # duper is fully %^&$&^% so is not allowed to send photo
 		if len(update.message.photo) > 0:
 			media_id = update.message.photo[-1].file_id
 		elif update.message.animation is not None:
